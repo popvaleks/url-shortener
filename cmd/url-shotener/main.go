@@ -1,11 +1,13 @@
 package main
 
 import (
-	"github.com/popvaleks/url-shortener/internal/storage/sqlite"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"log/slog"
 	"os"
 
 	"github.com/popvaleks/url-shortener/internal/config"
+	"github.com/popvaleks/url-shortener/internal/storage/sqlite"
 )
 
 const (
@@ -31,6 +33,13 @@ func main() {
 	}
 
 	_ = storage
+
+	router := chi.NewRouter()
+
+	router.Use(middleware.RequestID)
+	router.Use(middleware.RealIP)
+	router.Use(middleware.Logger)
+
 }
 
 func setupLogger(env string) (log *slog.Logger) {
