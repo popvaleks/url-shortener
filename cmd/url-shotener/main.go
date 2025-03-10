@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"log/slog"
-	"os"
-
 	"github.com/popvaleks/url-shortener/internal/config"
+	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/save"
+	mwLogger "github.com/popvaleks/url-shortener/internal/http-server/middleware/logger"
 	"github.com/popvaleks/url-shortener/internal/storage/sqlite"
+	"log/slog"
+	"net/http"
+	"os"
 )
 
 const (
@@ -32,14 +34,31 @@ func main() {
 		os.Exit(1)
 	}
 
-	_ = storage
-
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
 	router.Use(middleware.RealIP)
-	router.Use(middleware.Logger)
+	router.Use(mwLogger.New(log))
+	router.Use(middleware.Recoverer) // anti panic
+	router.Use(middleware.URLFormat) // routing
 
+	router.Post("/url", save.New(log, storage))
+
+	log.Info("starting server", slog.String("address", cfg.Address))
+
+	srv := &http.Server{
+		Addr:         cfg.Address,
+		Handler:      router,
+		ReadTimeout:  cfg.HttpServer.Timeout,
+		WriteTimeout: cfg.HttpServer.Timeout,
+		IdleTimeout:  cfg.HttpServer.IdleTimeout,
+	}
+
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error("error starting server", err)
+	}
+
+	log.Error("stopping server", slog.String("address", cfg.Address))
 }
 
 func setupLogger(env string) (log *slog.Logger) {
