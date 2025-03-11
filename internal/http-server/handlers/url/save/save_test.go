@@ -78,7 +78,6 @@ func TestSaveHandler(t *testing.T) {
 			req, err := http.NewRequest("POST", "/url", strings.NewReader(tt.requestBody))
 			assert.NoError(t, err)
 
-			// Добавляем middleware.RequestID для добавления ID запроса в контекст
 			handler := middleware.RequestID(http.HandlerFunc(New(log, mockSaver)))
 			rr := httptest.NewRecorder()
 			handler.ServeHTTP(rr, req)
