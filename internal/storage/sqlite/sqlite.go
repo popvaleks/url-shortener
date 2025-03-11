@@ -90,3 +90,28 @@ func (s *Storage) GetUrl(alias string) (string, error) {
 
 	return url, nil
 }
+
+func (s *Storage) DeleteUrl(alias string) error {
+	const op = "storage.sqlite.DeleteUrl"
+
+	stmt, err := s.db.Prepare("DELETE FROM url WHERE alias = ?")
+	if err != nil {
+		return fmt.Errorf("%s: %w", op, err)
+	}
+
+	result, err := stmt.Exec(alias)
+	if err != nil {
+		return fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("%s: get rows affected: %w", op, err)
+	}
+
+	if rowsAffected == 0 {
+		return storage.ErrUrlNotFound
+	}
+
+	return nil
+}
