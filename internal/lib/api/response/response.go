@@ -12,11 +12,11 @@ type Response struct {
 }
 
 const (
-	StatusOK    = "Ok"
+	StatusOK    = "OK"
 	StatusError = "Error"
 )
 
-func Ok() Response {
+func OK() Response {
 	return Response{
 		Status: StatusOK,
 	}

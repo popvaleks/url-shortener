@@ -40,7 +40,7 @@ func TestSaveHandler(t *testing.T) {
 				mockSaver.On("SaveUrl", "http://example.com", "example").Return(int64(1), nil)
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"status":"Ok","alias":"example"}`,
+			expectedBody: `{"status":"OK","alias":"example"}`,
 		},
 		{
 			name:        "success without alias",
@@ -49,7 +49,7 @@ func TestSaveHandler(t *testing.T) {
 				mockSaver.On("SaveUrl", "http://example.com", mock.AnythingOfType("string")).Return(int64(1), nil)
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"status":"Ok","alias":`,
+			expectedBody: `{"status":"OK","alias":`,
 		},
 		{
 			name:        "url already exists",
@@ -58,7 +58,7 @@ func TestSaveHandler(t *testing.T) {
 				mockSaver.On("SaveUrl", "http://example.com", "example").Return(int64(0), storage.ErrUrlExists)
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"status":"Ok","alias":"example"}`,
+			expectedBody: `{"status":"OK","alias":"example"}`,
 		},
 		{
 			name:         "invalid url",
