@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/popvaleks/url-shortener/internal/config"
+	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/getAllUrls"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/redirect"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/remove"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/save"
@@ -47,6 +48,7 @@ func main() {
 	router.Post("/url", save.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
 	router.Delete("/{alias}", remove.New(log, storage))
+	router.Get("/url", getAllUrls.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 

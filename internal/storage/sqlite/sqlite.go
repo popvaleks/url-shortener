@@ -5,9 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mattn/go-sqlite3"
-	"github.com/popvaleks/url-shortener/internal/storage"
-
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/popvaleks/url-shortener/internal/storage"
 )
 
 type Storage struct {
@@ -114,4 +113,26 @@ func (s *Storage) DeleteUrl(alias string) error {
 	}
 
 	return nil
+}
+
+func (s *Storage) GetAllUrls() (map[string]string, error) {
+	const op = "storage.sqlite.GetAllUrls"
+	stmt, err := s.db.Prepare("SELECT url, alias FROM url")
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	urlMap := make(map[string]string)
+
+	for rows.Next() {
+		var url, alias string
+		if err := rows.Scan(&url, &alias); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		urlMap[alias] = url
+	}
+
+	return urlMap, nil
 }
