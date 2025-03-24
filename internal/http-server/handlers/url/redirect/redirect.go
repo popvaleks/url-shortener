@@ -16,10 +16,6 @@ type UrlGetter interface {
 	GetUrl(alias string) (string, error)
 }
 
-type Request struct {
-	Alias string `json:"alias" validate:"required,alias"`
-}
-
 func New(log *slog.Logger, urlGetter UrlGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.redirect.New"

@@ -136,3 +136,45 @@ func (s *Storage) GetAllUrls() (map[string]string, error) {
 
 	return urlMap, nil
 }
+
+func (s *Storage) UpdateUrl(url, alias string) (string, error) {
+	const op = "storage.sqlite.updateUrl"
+
+	fmt.Println(url, alias)
+
+	var exists bool
+	r := s.db.QueryRow(
+		"SELECT EXISTS(SELECT 1 FROM url WHERE alias = :alias)",
+		sql.Named("alias", alias),
+	)
+
+	err := r.Scan(&exists)
+	if err != nil {
+		return "", err
+	}
+
+	if exists == false {
+		return "", storage.ErrAliasNotFound
+	}
+
+	result, err := s.db.Exec("UPDATE url SET url = :url WHERE alias = :alias",
+		sql.Named("url", url),
+		sql.Named("alias", alias),
+	)
+
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		return "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	if rowsAffected == 0 {
+		return "", storage.ErrAliasNotFound
+	}
+
+	return alias, nil
+}

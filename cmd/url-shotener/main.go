@@ -8,6 +8,7 @@ import (
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/redirect"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/remove"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/save"
+	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/updateUrl"
 	mwLogger "github.com/popvaleks/url-shortener/internal/http-server/middleware/logger"
 	"github.com/popvaleks/url-shortener/internal/storage/sqlite"
 	"log/slog"
@@ -49,6 +50,7 @@ func main() {
 	router.Get("/{alias}", redirect.New(log, storage))
 	router.Delete("/{alias}", remove.New(log, storage))
 	router.Get("/url", getAllUrls.New(log, storage))
+	router.Patch("/{alias}", updateUrl.New(log, storage))
 
 	log.Info("starting server", slog.String("address", cfg.Address))
 
