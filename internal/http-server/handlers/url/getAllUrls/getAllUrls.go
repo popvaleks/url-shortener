@@ -36,7 +36,7 @@ func New(log *slog.Logger, allUrlGetter AllUrlGetter) http.HandlerFunc {
 			return
 		}
 
-		log.Info("success get all urls", slog.Group("res_urlMap", rUrlMap))
+		log.Info("success get all urls")
 
 		render.JSON(w, r, Response{
 			Response: resp.OK(),

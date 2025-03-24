@@ -21,9 +21,13 @@ type Request struct {
 	Url string `json:"url" validate:"required,url"`
 }
 
+type ResponseAlias struct {
+	Alias string `json:"alias"`
+}
+
 type Response struct {
 	resp.Response
-	Alias string
+	Result ResponseAlias `json:"result"`
 }
 
 func New(log *slog.Logger, urlEditer UrlEditer) http.HandlerFunc {
@@ -88,7 +92,7 @@ func New(log *slog.Logger, urlEditer UrlEditer) http.HandlerFunc {
 
 		render.JSON(w, r, Response{
 			Response: resp.OK(),
-			Alias:    sAlias,
+			Result:   ResponseAlias{sAlias},
 		})
 	}
 }
