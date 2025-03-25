@@ -1,8 +1,4 @@
-# Аргумент для выбора платформы (по умолчанию linux/arm64 для M1/M2/M3)
-ARG TARGETPLATFORM=linux/arm64
-
-# Этап сборки
-FROM --platform=$TARGETPLATFORM golang:1.23.3 AS builder
+FROM golang:1.23.3-alpine AS builder
 
 # Устанавливаем зависимости для SQLite
 RUN apk add --no-cache git gcc musl-dev sqlite-dev
@@ -17,15 +13,10 @@ RUN go mod download
 COPY . .
 
 # Определяем архитектуру для сборки
-RUN case ${TARGETPLATFORM} in \
-    "linux/amd64")  GOARCH="amd64"  ;; \
-    "linux/arm64")  GOARCH="arm64"  ;; \
-    *)              GOARCH="arm64"  ;; \
-    esac && \
-    CGO_ENABLED=1 GOARCH=$GOARCH go build -ldflags="-s -w" -o url-shortener ./cmd/url-shortener
+RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -o url-shortener ./cmd/url-shortener
 
 # Этап запуска
-FROM --platform=$TARGETPLATFORM alpine:latest
+FROM alpine:latest
 
 # Устанавливаем runtime-зависимости для SQLite
 RUN apk add --no-cache sqlite-dev && \

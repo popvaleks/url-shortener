@@ -3,11 +3,11 @@ version: '3.8'
 services:
   url-shortener:
     build: .
-    platform: linux/arm64 # или linux/amd64
     ports:
       - "8080:8080"
     volumes:
       - ./storage:/app/storage
-      - ./config:/app/config
+      - ./config/docker.yaml:/app/config/docker.yaml
     environment:
       - CONFIG_PATH=/app/config/docker.yaml
+    restart: unless-stopped
