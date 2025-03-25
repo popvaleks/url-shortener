@@ -18,3 +18,5 @@ buildDocker:
 runDocker:
 	docker run -p 8080:8080 url-shortener
 
+runHmr:
+	air
