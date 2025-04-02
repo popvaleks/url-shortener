@@ -17,11 +17,16 @@ type UrlSaver interface {
 	SaveUrl(inputUrl string, alias string) (int64, error)
 }
 
+// Request represents URL save request
+// @Description Request to create a short URL
 type Request struct {
 	Url   string `json:"url" validate:"required,url"`
 	Alias string `json:"alias,omitempty"`
 }
 
+// Response represents URL save response
+// @Description Response with the created alias
+// swagger:model
 type Response struct {
 	resp.Response
 	Alias string `json:"alias,omitempty"`
@@ -29,6 +34,16 @@ type Response struct {
 
 const aliasLength = 8
 
+// New
+// @Summary Save URL
+// @Description Creates a short alias for the provided URL
+// @Tags url
+// @Accept  json
+// @Produce  json
+// @Param input body Request true "URL shortening request data"
+// @Success 200 {object} Response
+// @Failure 400 {object} resp.Response
+// @Router /url [post]
 func New(log *slog.Logger, urlSaver UrlSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handler.url.save.New"

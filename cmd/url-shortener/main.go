@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	_ "github.com/popvaleks/url-shortener/docs"
 	"github.com/popvaleks/url-shortener/internal/config"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/getAllUrls"
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/redirect"
@@ -11,6 +12,7 @@ import (
 	"github.com/popvaleks/url-shortener/internal/http-server/handlers/url/updateUrl"
 	mwLogger "github.com/popvaleks/url-shortener/internal/http-server/middleware/logger"
 	"github.com/popvaleks/url-shortener/internal/storage/sqlite"
+	httpSwagger "github.com/swaggo/http-swagger"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,8 +24,13 @@ const (
 	envProd  = "prod"
 )
 
-// CONFIG_PATH=config/local.yaml
+// @title Url shortener
+// @version 1.0
+// @description Shortener service
+// @host localhost:8080
+// @BasePath /
 func main() {
+	// CONFIG_PATH=config/local.yaml
 	cfg := config.MustLoad()
 
 	log := setupLogger(cfg.Env)
@@ -45,6 +52,10 @@ func main() {
 	router.Use(mwLogger.New(log))
 	router.Use(middleware.Recoverer) // anti panic
 	router.Use(middleware.URLFormat) // routing
+
+	router.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	router.Post("/url", save.New(log, storage))
 	router.Get("/{alias}", redirect.New(log, storage))
