@@ -13,11 +13,22 @@ type AllUrlGetter interface {
 	GetAllUrls() (map[string]string, error)
 }
 
+// Response represents response with all URLs
+// @Description Success response containing all URL mappings
+// swagger:model
 type Response struct {
 	resp.Response
 	Result map[string]string `json:"result"`
 }
 
+// New
+// @Summary Get all URLs
+// @Description Returns all existing short URL mappings
+// @Tags url
+// @Produce  json
+// @Success 200 {object} Response
+// @Failure 500 {object} resp.Response
+// @Router /url [get]
 func New(log *slog.Logger, allUrlGetter AllUrlGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.getAllUrls.New"

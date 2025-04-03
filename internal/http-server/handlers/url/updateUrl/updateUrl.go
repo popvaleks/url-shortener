@@ -17,19 +17,39 @@ type UrlEditer interface {
 	UpdateUrl(url, alias string) (string, error)
 }
 
+// Request represents URL update request
+// @Description Request to update original URL for existing alias
 type Request struct {
 	Url string `json:"url" validate:"required,url"`
 }
 
+// ResponseAlias represents alias in response
+// @Description Contains updated alias information
 type ResponseAlias struct {
 	Alias string `json:"alias"`
 }
 
+// Response represents URL update response
+// @Description Success response with updated alias
+// swagger:model
 type Response struct {
 	resp.Response
 	Result ResponseAlias `json:"result"`
 }
 
+// New
+// @Summary Update URL by alias
+// @Description Updates original URL for existing alias
+// @Tags url
+// @Accept  json
+// @Produce  json
+// @Param alias path string true "Alias to update"
+// @Param input body Request true "New URL data"
+// @Success 200 {object} Response
+// @Failure 400 {object} resp.Response "Invalid request or validation error"
+// @Failure 404 {object} resp.Response "Alias not found"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /{alias} [patch]
 func New(log *slog.Logger, urlEditer UrlEditer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.updateUrl.New"

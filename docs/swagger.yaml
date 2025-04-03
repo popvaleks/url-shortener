@@ -7,6 +7,26 @@ definitions:
       status:
         type: string
     type: object
+  internal_http-server_handlers_url_getAllUrls.Response:
+    description: Success response containing all URL mappings
+    properties:
+      error:
+        type: string
+      result:
+        additionalProperties:
+          type: string
+        type: object
+      status:
+        type: string
+    type: object
+  internal_http-server_handlers_url_remove.Response:
+    description: Success response for URL deletion
+    properties:
+      error:
+        type: string
+      status:
+        type: string
+    type: object
   internal_http-server_handlers_url_save.Request:
     description: Request to create a short URL
     properties:
@@ -27,6 +47,30 @@ definitions:
       status:
         type: string
     type: object
+  internal_http-server_handlers_url_updateUrl.Request:
+    description: Request to update original URL for existing alias
+    properties:
+      url:
+        type: string
+    required:
+    - url
+    type: object
+  internal_http-server_handlers_url_updateUrl.Response:
+    description: Success response with updated alias
+    properties:
+      error:
+        type: string
+      result:
+        $ref: '#/definitions/internal_http-server_handlers_url_updateUrl.ResponseAlias'
+      status:
+        type: string
+    type: object
+  internal_http-server_handlers_url_updateUrl.ResponseAlias:
+    description: Contains updated alias information
+    properties:
+      alias:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -34,7 +78,116 @@ info:
   title: Url shortener
   version: "1.0"
 paths:
+  /{alias}:
+    delete:
+      description: Deletes a short URL by its alias
+      parameters:
+      - description: Alias of the URL to delete
+        in: path
+        name: alias
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http-server_handlers_url_remove.Response'
+        "400":
+          description: Alias is missing
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "404":
+          description: URL not found
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+      summary: Delete URL by alias
+      tags:
+      - url
+    get:
+      description: Redirects to the original URL associated with the provided alias
+      parameters:
+      - description: Alias for the URL to redirect
+        in: path
+        name: alias
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Redirects to the original URL
+        "400":
+          description: Alias is missing
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "404":
+          description: URL not found for the provided alias
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+      summary: Redirect by alias
+      tags:
+      - url
+    patch:
+      consumes:
+      - application/json
+      description: Updates original URL for existing alias
+      parameters:
+      - description: Alias to update
+        in: path
+        name: alias
+        required: true
+        type: string
+      - description: New URL data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/internal_http-server_handlers_url_updateUrl.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http-server_handlers_url_updateUrl.Response'
+        "400":
+          description: Invalid request or validation error
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "404":
+          description: Alias not found
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+      summary: Update URL by alias
+      tags:
+      - url
   /url:
+    get:
+      description: Returns all existing short URL mappings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_http-server_handlers_url_getAllUrls.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response'
+      summary: Get all URLs
+      tags:
+      - url
     post:
       consumes:
       - application/json

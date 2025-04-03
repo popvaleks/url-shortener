@@ -10,6 +10,30 @@
     "basePath": "/",
     "paths": {
         "/url": {
+            "get": {
+                "description": "Returns all existing short URL mappings",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "url"
+                ],
+                "summary": "Get all URLs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http-server_handlers_url_getAllUrls.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Creates a short alias for the provided URL",
                 "consumes": [
@@ -48,10 +72,180 @@
                     }
                 }
             }
+        },
+        "/{alias}": {
+            "get": {
+                "description": "Redirects to the original URL associated with the provided alias",
+                "tags": [
+                    "url"
+                ],
+                "summary": "Redirect by alias",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alias for the URL to redirect",
+                        "name": "alias",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "302": {
+                        "description": "Redirects to the original URL"
+                    },
+                    "400": {
+                        "description": "Alias is missing",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "URL not found for the provided alias",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a short URL by its alias",
+                "tags": [
+                    "url"
+                ],
+                "summary": "Delete URL by alias",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alias of the URL to delete",
+                        "name": "alias",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http-server_handlers_url_remove.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Alias is missing",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "URL not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Updates original URL for existing alias",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "url"
+                ],
+                "summary": "Update URL by alias",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Alias to update",
+                        "name": "alias",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New URL data",
+                        "name": "input",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_http-server_handlers_url_updateUrl.Request"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_http-server_handlers_url_updateUrl.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request or validation error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "404": {
+                        "description": "Alias not found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_popvaleks_url-shortener_internal_lib_api_response.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
         "github_com_popvaleks_url-shortener_internal_lib_api_response.Response": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http-server_handlers_url_getAllUrls.Response": {
+            "description": "Success response containing all URL mappings",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http-server_handlers_url_remove.Response": {
+            "description": "Success response for URL deletion",
             "type": "object",
             "properties": {
                 "error": {
@@ -88,6 +282,42 @@
                     "type": "string"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http-server_handlers_url_updateUrl.Request": {
+            "description": "Request to update original URL for existing alias",
+            "type": "object",
+            "required": [
+                "url"
+            ],
+            "properties": {
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http-server_handlers_url_updateUrl.Response": {
+            "description": "Success response with updated alias",
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "result": {
+                    "$ref": "#/definitions/internal_http-server_handlers_url_updateUrl.ResponseAlias"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_http-server_handlers_url_updateUrl.ResponseAlias": {
+            "description": "Contains updated alias information",
+            "type": "object",
+            "properties": {
+                "alias": {
                     "type": "string"
                 }
             }

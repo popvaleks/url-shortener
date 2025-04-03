@@ -16,6 +16,16 @@ type UrlGetter interface {
 	GetUrl(alias string) (string, error)
 }
 
+// New
+// @Summary Redirect by alias
+// @Description Redirects to the original URL associated with the provided alias
+// @Tags url
+// @Param alias path string true "Alias for the URL to redirect"
+// @Success 302 "Redirects to the original URL"
+// @Failure 400 {object} resp.Response "Alias is missing"
+// @Failure 404 {object} resp.Response "URL not found for the provided alias"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /{alias} [get]
 func New(log *slog.Logger, urlGetter UrlGetter) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.redirect.New"

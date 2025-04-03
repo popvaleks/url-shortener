@@ -16,14 +16,29 @@ type UrlRemover interface {
 	DeleteUrl(alias string) error
 }
 
+// Request represents URL deletion request
+// @Description Request to delete a short URL
 type Request struct {
 	Alias string `json:"alias" validate:"required,alias"`
 }
 
+// Response represents URL deletion response
+// @Description Success response for URL deletion
+// swagger:model
 type Response struct {
 	resp.Response
 }
 
+// New
+// @Summary Delete URL by alias
+// @Description Deletes a short URL by its alias
+// @Tags url
+// @Param alias path string true "Alias of the URL to delete"
+// @Success 200 {object} Response
+// @Failure 400 {object} resp.Response "Alias is missing"
+// @Failure 404 {object} resp.Response "URL not found"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /{alias} [delete]
 func New(log *slog.Logger, urlRemover UrlRemover) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		const op = "handlers.url.remove.New"
