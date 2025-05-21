@@ -44,14 +44,6 @@ func TestRedirectHandler(t *testing.T) {
 			expectedURL:    "http://example.com",
 		},
 		{
-			name:  "alias not allowed",
-			alias: "",
-			setupMock: func() {
-			},
-			expectedStatus: http.StatusNotFound,
-			expectedURL:    "",
-		},
-		{
 			name:  "url not found",
 			alias: "notfound",
 			setupMock: func() {

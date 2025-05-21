@@ -41,7 +41,7 @@ func main() {
 	storage, err := sqlite.New(cfg.StoragePath)
 
 	if err != nil {
-		log.Error("error creating storage", err)
+		log.Error("error creating storage", slog.String("error", err.Error()))
 		os.Exit(1)
 	}
 
@@ -74,7 +74,7 @@ func main() {
 	}
 
 	if err := srv.ListenAndServe(); err != nil {
-		log.Error("error starting server", err)
+		log.Error("error starting server", slog.String("error", err.Error()))
 	}
 
 	log.Error("stopping server", slog.String("address", cfg.Address))
