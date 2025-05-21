@@ -24,21 +24,20 @@ func (m *MockUrlRemover) DeleteUrl(alias string) error {
 }
 
 func TestRemoveHandler(t *testing.T) {
-	mockRemover := new(MockUrlRemover)
 	log := slog.Default()
 
 	tests := []struct {
 		name           string
 		alias          string
-		setupMock      func()
+		setupMock      func(*MockUrlRemover) // Принимает конкретный мок
 		expectedStatus int
 		expectedBody   string
 	}{
 		{
 			name:  "success",
 			alias: "example",
-			setupMock: func() {
-				mockRemover.On("DeleteUrl", "example").Return(nil)
+			setupMock: func(m *MockUrlRemover) {
+				m.On("DeleteUrl", "example").Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"status":"OK"}`,
@@ -46,8 +45,8 @@ func TestRemoveHandler(t *testing.T) {
 		{
 			name:  "url not found",
 			alias: "notfound",
-			setupMock: func() {
-				mockRemover.On("DeleteUrl", "notfound").Return(storage.ErrUrlNotFound)
+			setupMock: func(m *MockUrlRemover) {
+				m.On("DeleteUrl", "notfound").Return(storage.ErrUrlNotFound)
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"status":"Error","error":"url not found"}`,
@@ -55,8 +54,8 @@ func TestRemoveHandler(t *testing.T) {
 		{
 			name:  "internal server error",
 			alias: "error",
-			setupMock: func() {
-				mockRemover.On("DeleteUrl", "error").Return(errors.New("internal error"))
+			setupMock: func(m *MockUrlRemover) {
+				m.On("DeleteUrl", "error").Return(errors.New("internal error"))
 			},
 			expectedStatus: http.StatusOK,
 			expectedBody:   `{"status":"Error","error":"internal server error"}`,
@@ -66,8 +65,10 @@ func TestRemoveHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
 			t.Parallel()
+			// Создаем новый мок для каждого теста
+			mockRemover := new(MockUrlRemover)
+			tt.setupMock(mockRemover) // Передаем конкретный мок
 
 			r := chi.NewRouter()
 			r.Use(middleware.RequestID)
@@ -82,6 +83,7 @@ func TestRemoveHandler(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, rr.Code)
 			assert.JSONEq(t, tt.expectedBody, rr.Body.String())
 
+			// Проверяем ожидания только для текущего мока
 			mockRemover.AssertExpectations(t)
 		})
 	}

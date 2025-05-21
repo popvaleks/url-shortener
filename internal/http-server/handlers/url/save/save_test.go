@@ -23,21 +23,20 @@ func (m *MockUrlSaver) SaveUrl(inputUrl string, alias string) (int64, error) {
 }
 
 func TestSaveHandler(t *testing.T) {
-	mockSaver := new(MockUrlSaver)
 	log := slog.Default()
 
 	tests := []struct {
 		name         string
 		requestBody  string
-		setupMock    func()
+		setupMock    func(*MockUrlSaver) // Принимает конкретный мок
 		expectedCode int
 		expectedBody string
 	}{
 		{
 			name:        "success with alias",
 			requestBody: `{"url": "http://example.com", "alias": "example"}`,
-			setupMock: func() {
-				mockSaver.On("SaveUrl", "http://example.com", "example").Return(int64(1), nil)
+			setupMock: func(m *MockUrlSaver) {
+				m.On("SaveUrl", "http://example.com", "example").Return(int64(1), nil)
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"OK","alias":"example"}`,
@@ -45,8 +44,8 @@ func TestSaveHandler(t *testing.T) {
 		{
 			name:        "success without alias",
 			requestBody: `{"url": "http://example.com"}`,
-			setupMock: func() {
-				mockSaver.On("SaveUrl", "http://example.com", mock.AnythingOfType("string")).Return(int64(1), nil)
+			setupMock: func(m *MockUrlSaver) {
+				m.On("SaveUrl", "http://example.com", mock.AnythingOfType("string")).Return(int64(1), nil)
 			},
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"OK","alias":`,
@@ -54,16 +53,16 @@ func TestSaveHandler(t *testing.T) {
 		{
 			name:        "url already exists",
 			requestBody: `{"url": "http://example.com", "alias": "example"}`,
-			setupMock: func() {
-				mockSaver.On("SaveUrl", "http://example.com", "example").Return(int64(0), storage.ErrUrlExists)
+			setupMock: func(m *MockUrlSaver) {
+				m.On("SaveUrl", "http://example.com", "example").Return(int64(0), storage.ErrUrlExists)
 			},
 			expectedCode: http.StatusOK,
-			expectedBody: `{"status":"OK","alias":"example"}`,
+			expectedBody: `{"status":"Error","error":"url already exists"}`,
 		},
 		{
 			name:         "invalid url",
 			requestBody:  `{"url": "invalid-url"}`,
-			setupMock:    func() {},
+			setupMock:    func(m *MockUrlSaver) {},
 			expectedCode: http.StatusOK,
 			expectedBody: `{"status":"Error","error":"field Url is not a valid URL"}`,
 		},
@@ -72,8 +71,10 @@ func TestSaveHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
 			t.Parallel()
+			// Создаем новый мок для каждого теста
+			mockSaver := new(MockUrlSaver)
+			tt.setupMock(mockSaver) // Передаем конкретный мок
 
 			req, err := http.NewRequest("POST", "/url", strings.NewReader(tt.requestBody))
 			assert.NoError(t, err)
@@ -87,6 +88,7 @@ func TestSaveHandler(t *testing.T) {
 				assert.Contains(t, rr.Body.String(), tt.expectedBody)
 			}
 
+			// Проверяем ожидания только для текущего мока
 			mockSaver.AssertExpectations(t)
 		})
 	}

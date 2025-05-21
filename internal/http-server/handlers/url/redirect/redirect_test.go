@@ -24,21 +24,20 @@ func (m *MockUrlGetter) GetUrl(alias string) (string, error) {
 }
 
 func TestRedirectHandler(t *testing.T) {
-	mockGetter := new(MockUrlGetter)
 	log := slog.Default()
 
 	tests := []struct {
 		name           string
 		alias          string
-		setupMock      func()
+		setupMock      func(*MockUrlGetter) // Принимает конкретный мок
 		expectedStatus int
 		expectedURL    string
 	}{
 		{
 			name:  "success",
 			alias: "example",
-			setupMock: func() {
-				mockGetter.On("GetUrl", "example").Return("http://example.com", nil)
+			setupMock: func(m *MockUrlGetter) {
+				m.On("GetUrl", "example").Return("http://example.com", nil)
 			},
 			expectedStatus: http.StatusFound,
 			expectedURL:    "http://example.com",
@@ -46,8 +45,8 @@ func TestRedirectHandler(t *testing.T) {
 		{
 			name:  "url not found",
 			alias: "notfound",
-			setupMock: func() {
-				mockGetter.On("GetUrl", "notfound").Return("", storage.ErrUrlNotFound)
+			setupMock: func(m *MockUrlGetter) {
+				m.On("GetUrl", "notfound").Return("", storage.ErrUrlNotFound)
 			},
 			expectedStatus: http.StatusOK,
 			expectedURL:    "",
@@ -55,8 +54,8 @@ func TestRedirectHandler(t *testing.T) {
 		{
 			name:  "internal server error",
 			alias: "error",
-			setupMock: func() {
-				mockGetter.On("GetUrl", "error").Return("", errors.New("internal error"))
+			setupMock: func(m *MockUrlGetter) {
+				m.On("GetUrl", "error").Return("", errors.New("internal error"))
 			},
 			expectedStatus: http.StatusOK,
 			expectedURL:    "",
@@ -66,8 +65,10 @@ func TestRedirectHandler(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
 			t.Parallel()
+			// Создаем новый мок для каждого теста
+			mockGetter := new(MockUrlGetter)
+			tt.setupMock(mockGetter) // Передаем конкретный мок
 
 			r := chi.NewRouter()
 			r.Use(middleware.RequestID)
@@ -84,10 +85,10 @@ func TestRedirectHandler(t *testing.T) {
 			if tt.expectedURL != "" {
 				assert.Equal(t, tt.expectedURL, rr.Header().Get("Location"))
 			} else {
-				// Проверяем, что редиректа не было
 				assert.Empty(t, rr.Header().Get("Location"))
 			}
 
+			// Проверяем ожидания только для текущего мока
 			mockGetter.AssertExpectations(t)
 		})
 	}
